@@ -35,7 +35,7 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+let firebaseConfig = {
   apiKey: "AIzaSyBHg4Y_CEMBU7aaxrO19Y1NsvUXiVeiGfo",
   authDomain: "genkit-by-example.firebaseapp.com",
   projectId: "genkit-by-example",
@@ -44,6 +44,12 @@ const firebaseConfig = {
   appId: "1:515443902134:web:ce23c3419ffbc81b240817",
   measurementId: "G-PVQ062HLN2",
 };
+
+const encodedFirebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG_BASE64;
+if (encodedFirebaseConfig) {
+  const decodedConfigString = Buffer.from(encodedFirebaseConfig, 'base64').toString('utf8');
+  firebaseConfig = JSON.parse(decodedConfigString);
+}
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
