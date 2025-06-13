@@ -35,7 +35,7 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+let firebaseConfig = {
   apiKey: "AIzaSyBHg4Y_CEMBU7aaxrO19Y1NsvUXiVeiGfo",
   authDomain: "genkit-by-example.firebaseapp.com",
   projectId: "genkit-by-example",
@@ -44,6 +44,13 @@ const firebaseConfig = {
   appId: "1:515443902134:web:ce23c3419ffbc81b240817",
   measurementId: "G-PVQ062HLN2",
 };
+
+// Example of what you might add to .env.local to use your own project
+// NEXT_PUBLIC_FIREBASE_CONFIG_JSON_STRING={"apiKey": "AIzaSyBHg4Y_CEMBU7aaxrO19Y1NsvUXiVeiGfo", "authDomain": "genkit-by-example.firebaseapp.com", "projectId": "genkit-by-example", "storageBucket": "genkit-by-example.firebasestorage.app", "messagingSenderId": "515443902134", "appId": "1:515443902134:web:ce23c3419ffbc81b240817", "measurementId": "G-PVQ062HLN2"}
+const firebaseConfigString = process.env.NEXT_PUBLIC_FIREBASE_CONFIG_JSON_STRING;
+if (firebaseConfigString) {
+  firebaseConfig = JSON.parse(firebaseConfigString);
+}
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
