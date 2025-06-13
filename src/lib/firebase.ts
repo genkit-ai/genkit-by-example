@@ -45,10 +45,11 @@ let firebaseConfig = {
   measurementId: "G-PVQ062HLN2",
 };
 
-const encodedFirebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG_BASE64;
-if (encodedFirebaseConfig) {
-  const decodedConfigString = Buffer.from(encodedFirebaseConfig, 'base64').toString('utf8');
-  firebaseConfig = JSON.parse(decodedConfigString);
+// Example of what you might add to .env.local to use your own project
+// NEXT_PUBLIC_FIREBASE_CONFIG_JSON_STRING={"apiKey": "AIzaSyBHg4Y_CEMBU7aaxrO19Y1NsvUXiVeiGfo", "authDomain": "genkit-by-example.firebaseapp.com", "projectId": "genkit-by-example", "storageBucket": "genkit-by-example.firebasestorage.app", "messagingSenderId": "515443902134", "appId": "1:515443902134:web:ce23c3419ffbc81b240817", "measurementId": "G-PVQ062HLN2"}
+const firebaseConfigString = process.env.NEXT_PUBLIC_FIREBASE_CONFIG_JSON_STRING;
+if (firebaseConfigString) {
+  firebaseConfig = JSON.parse(firebaseConfigString);
 }
 
 // Initialize Firebase
