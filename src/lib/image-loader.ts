@@ -15,13 +15,7 @@
  */
 
 /**
- * Custom image loader to handle basePath correctly.
- * 
- * Next.js Image Optimization has known issues with basePath where the optimizer
- * doesn't fetch source images from the correct basePath location, resulting in
- * 400 errors. This custom loader bypasses optimization and serves images directly.
- * 
- * Related: https://github.com/vercel/next.js/issues/68498
+ * Custom image loader to handle basePath correctly
  */
 export default function imageLoader({ src }: { src: string }) {
   return `/examples${src}`;
