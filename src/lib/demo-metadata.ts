@@ -16,6 +16,7 @@
 
 import { findDemo } from "@/data";
 import { Metadata } from "next";
+import { SITE_ORIGIN } from "./constants";
 
 export function demoMetadata(id: string): () => Promise<Metadata> {
   const demo = findDemo(id);
@@ -26,9 +27,7 @@ export function demoMetadata(id: string): () => Promise<Metadata> {
       description: demo.description,
       openGraph: {
         images: [
-          `${process.env.SITE_ORIGIN || "http://localhost:3000"}/api/og?title=${
-            demo.name
-          }`,
+          `${SITE_ORIGIN}/api/og?title=${demo.name}`,
         ],
         description: demo.description,
         title: `Genkit by Example - ${demo.name}`,

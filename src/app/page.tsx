@@ -19,6 +19,7 @@ import { demos } from "@/data";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { SITE_ORIGIN } from "@/lib/constants";
 
 export const metadata: Metadata = {
 	title: "Add GenAI to your web/mobile app",
@@ -26,9 +27,7 @@ export const metadata: Metadata = {
 		"Pre-built examples of using Genkit to build a variety of AI-powered features for Next.js applications.",
 	openGraph: {
 		images: [
-			`${
-				process.env.SITE_ORIGIN || "http://localhost:3000"
-			}/api/og?title=Practical%20GenAI%20 Demos`,
+			`${SITE_ORIGIN}/api/og?title=Practical%20GenAI%20 Demos`,
 		],
 	},
 };

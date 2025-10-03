@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-import Demo from "@/components/demo";
-import SimpleChatbotConfig from "./config";
-import Chat from "@/components/chat";
-import { demoMetadata } from "@/lib/demo-metadata";
-import { withBasePath } from "@/lib/constants";
-
-export const generateMetadata = demoMetadata("chatbot-simple");
-
-export default async function Page() {
-  return (
-    <Demo id="chatbot-simple" Config={SimpleChatbotConfig}>
-      <Chat endpoint={withBasePath("/chatbot-simple/api")} />
-    </Demo>
-  );
+/**
+ * Custom image loader to handle basePath correctly.
+ * 
+ * Next.js Image Optimization has known issues with basePath where the optimizer
+ * doesn't fetch source images from the correct basePath location, resulting in
+ * 400 errors. This custom loader bypasses optimization and serves images directly.
+ * 
+ * Related: https://github.com/vercel/next.js/issues/68498
+ */
+export default function imageLoader({ src }: { src: string }) {
+  return `/examples${src}`;
 }
+

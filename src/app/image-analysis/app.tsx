@@ -26,6 +26,7 @@ import ImageField from "./image-field";
 import HighlightArea from "./highlight-area";
 import DemoConfig from "@/lib/demo-config";
 import useAgent from "@/lib/use-agent";
+import { withBasePath } from "@/lib/constants";
 
 function fileToDataUri(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -57,8 +58,8 @@ export default function ImageAnalysisApp() {
 
   // Sample images
   const sampleImages = [
-    { name: "Bird in Tree", path: "/image-analysis/bird_in_tree.png" },
-    { name: "Desk Items", path: "/image-analysis/desk_items.jpg" },
+    { name: "Bird in Tree", path: withBasePath("/image-analysis/bird_in_tree.png") },
+    { name: "Desk Items", path: withBasePath("/image-analysis/desk_items.jpg") },
   ];
 
   function borderColor(o: Partial<ImageObject>) {
@@ -80,7 +81,7 @@ export default function ImageAnalysisApp() {
       const analysis = await simplePost<
         { imageUrl: string; system: any },
         Analysis
-      >("/image-analysis/api", {
+      >(withBasePath("/image-analysis/api"), {
         system: config?.system,
         imageUrl: await fileToDataUri(file),
       });

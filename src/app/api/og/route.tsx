@@ -19,6 +19,9 @@ import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
+// Edge runtime doesn't support all Node.js APIs, so we inline the constant
+const SITE_ORIGIN = process.env.SITE_ORIGIN || "http://localhost:3000/examples";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -39,9 +42,7 @@ export async function GET(req: NextRequest) {
             padding: "40px",
             color: "white",
             fontFamily: "Nunito Sans", // Use Nunito Sans font (default)
-            backgroundImage: `url(${
-              process.env.SITE_ORIGIN || "http://localhost:3000"
-            }/og_bg.png)`,
+            backgroundImage: `url(${SITE_ORIGIN}/og_bg.png)`,
           }}
         >
           <h1

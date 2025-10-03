@@ -22,4 +22,4 @@ env:
   - variable: MAX_REQUESTS_HOURLY
     value: "50"
   - variable: SITE_ORIGIN
-    value: https://examples.genkit.dev
+    value: https://genkit.dev/examples
