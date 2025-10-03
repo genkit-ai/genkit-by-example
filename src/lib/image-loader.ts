@@ -15,7 +15,8 @@
  */
 
 /**
- * Custom image loader to handle basePath correctly
+ * TODO: Ran into issues with builtin NextJS image optimization serving the wrong image after configuring custom basePath.
+ * Custom loader lets us control that but turns off the automatic optimziation.
  */
 export default function imageLoader({ src }: { src: string }) {
   return `/examples${src}`;
