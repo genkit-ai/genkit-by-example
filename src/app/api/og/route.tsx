@@ -16,11 +16,9 @@
 
 import { ImageResponse } from "@vercel/og";
 import { NextRequest } from "next/server";
+import { SITE_ORIGIN } from "@/lib/constants";
 
 export const runtime = "edge";
-
-// Edge runtime doesn't support all Node.js APIs, so we inline the constant
-const SITE_ORIGIN = process.env.SITE_ORIGIN || "http://localhost:3000/examples";
 
 export async function GET(req: NextRequest) {
   try {
