@@ -23,7 +23,7 @@ import { defineMcpClient, GenkitMcpClient } from "@genkit-ai/mcp";
 
 const ai = genkit({
   plugins: [googleAI()], // set the GOOGLE_API_KEY env variable
-  model: googleAI.model("gemini-2.5-flash"),
+  model: googleAI.model("gemini-flash-latest"),
 });
 
 let firebaseMcp: GenkitMcpClient;
