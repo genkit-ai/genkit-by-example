@@ -19,6 +19,7 @@ import React from "react";
 import Chat from "@/components/chat";
 import { Sun, Cloud, CloudRain, CloudSnow } from "lucide-react";
 import Dice from "./dice-roll";
+import { withBasePath } from "@/lib/constants";
 
 function WeatherResponse({
   temperature,
@@ -78,7 +79,7 @@ function DiceResponse({ output }: { output: number }) {
 export default function ToolCallingChatbotApp() {
   return (
     <Chat
-      endpoint="/mcp/api"
+      endpoint={withBasePath("/mcp/api")}
       renderPart={(part) => {
         if (part.toolResponse?.name === "getWeather")
           return <WeatherResponse {...(part.toolResponse.output as any)} />;

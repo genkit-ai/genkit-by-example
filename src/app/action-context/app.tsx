@@ -19,13 +19,14 @@ import React, { useContext } from "react";
 import Chat from "@/components/chat";
 import DemoConfig from "@/lib/demo-config";
 import CodeBlock from "@/components/code-block";
+import { withBasePath } from "@/lib/constants";
 
 export default function ActionContextDemoApp() {
   const { config } = useContext(DemoConfig);
 
   return (
     <Chat
-      endpoint="/action-context/api"
+      endpoint={withBasePath("/action-context/api")}
       renderPart={(part, info) => {
         if (info.message.role === "system") return <></>;
         switch (part.toolResponse?.name) {

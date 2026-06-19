@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-import Demo from "@/components/demo";
-import SimpleChatbotConfig from "./config";
-import Chat from "@/components/chat";
-import { demoMetadata } from "@/lib/demo-metadata";
-import { withBasePath } from "@/lib/constants";
-
-export const generateMetadata = demoMetadata("chatbot-simple");
-
-export default async function Page() {
-  return (
-    <Demo id="chatbot-simple" Config={SimpleChatbotConfig}>
-      <Chat endpoint={withBasePath("/chatbot-simple/api")} />
-    </Demo>
-  );
+/**
+ * TODO: Ran into issues with builtin NextJS image optimization serving the wrong image after configuring custom basePath.
+ * Custom loader lets us control that but turns off the automatic optimziation.
+ */
+export default function imageLoader({ src }: { src: string }) {
+  return `/examples${src}`;
 }
+

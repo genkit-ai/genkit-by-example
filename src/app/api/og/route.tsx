@@ -16,6 +16,7 @@
 
 import { ImageResponse } from "@vercel/og";
 import { NextRequest } from "next/server";
+import { SITE_ORIGIN } from "@/lib/constants";
 
 export const runtime = "edge";
 
@@ -39,9 +40,7 @@ export async function GET(req: NextRequest) {
             padding: "40px",
             color: "white",
             fontFamily: "Nunito Sans", // Use Nunito Sans font (default)
-            backgroundImage: `url(${
-              process.env.SITE_ORIGIN || "http://localhost:3000"
-            }/og_bg.png)`,
+            backgroundImage: `url(${SITE_ORIGIN}/og_bg.png)`,
           }}
         >
           <h1

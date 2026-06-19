@@ -24,6 +24,7 @@ import type { CharacterSheet } from "./schema";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import React from "react";
+import { withBasePath } from "@/lib/constants";
 
 export default function StructuredOutputApp() {
 	const [prompt, setPrompt] = useState<string>("");
@@ -47,7 +48,7 @@ export default function StructuredOutputApp() {
 		const stream = post<
 			{ prompt: string },
 			{ output: Partial<CharacterSheet> }
-		>("/structured-output/api", {
+		>(withBasePath("/structured-output/api"), {
 			prompt,
 		});
 		for await (const chunk of stream) {

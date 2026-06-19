@@ -1,4 +1,4 @@
 User-Agent: *
 Allow: /
 
-Sitemap: https://examples.genkit.dev/sitemap.xml
+Sitemap: https://genkit.dev/examples/sitemap.xml

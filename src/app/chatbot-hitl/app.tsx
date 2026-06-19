@@ -5,6 +5,7 @@ import type { Answer, Question } from "./schema";
 import type { MessageData, Part, ToolResponsePart } from "genkit";
 import useAgent from "@/lib/use-agent";
 import QuestionForm from "./question-form";
+import { withBasePath } from "@/lib/constants";
 
 function findResponse(
   request: Part,
@@ -18,7 +19,7 @@ function findResponse(
 }
 
 export default function HitlChatbotApp() {
-  const agent = useAgent({ endpoint: "/chatbot-hitl/api" });
+  const agent = useAgent({ endpoint: withBasePath("/chatbot-hitl/api") });
 
   return (
     <Chat
