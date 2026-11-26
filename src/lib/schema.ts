@@ -17,14 +17,106 @@
 import { z, MessageSchema, PartSchema } from "genkit";
 import { ToolRequestPartSchema, ToolResponsePartSchema } from "genkit/model";
 
+const MAX_SYSTEM_CHARS = 2_000;
+const MAX_PROMPT_CHARS = 4_000;
+const MAX_MESSAGE_PART_CHARS = 8_000;
+const MAX_MESSAGES = 20;
+const MAX_PARTS_PER_MESSAGE = 20;
+
+function validateTextOnlyParts(
+  parts: z.infer<typeof PartSchema>[],
+  maxTotalChars: number,
+  label: string,
+  ctx: z.RefinementCtx
+) {
+  let total = 0;
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if ("media" in part && part.media) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [i],
+        message: `Media parts are not allowed in ${label}.`,
+      });
+      return;
+    }
+    if (!("text" in part) || typeof part.text !== "string") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [i],
+        message: `Only text parts are allowed in ${label}.`,
+      });
+      return;
+    }
+    total += part.text.length;
+  }
+  if (total > maxTotalChars) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `${label} exceeds maximum length of ${maxTotalChars} characters.`,
+    });
+  }
+}
+
 export const GenerateRequestSchema = z.object({
-  system: z.array(PartSchema).optional(),
-  messages: z.array(MessageSchema).optional(),
-  prompt: z.array(PartSchema).optional(),
+  system: z
+    .array(PartSchema)
+    .max(4)
+    .superRefine((parts, ctx) =>
+      validateTextOnlyParts(parts, MAX_SYSTEM_CHARS, "system prompt", ctx)
+    )
+    .optional(),
+  messages: z
+    .array(MessageSchema)
+    .max(MAX_MESSAGES)
+    .superRefine((messages, ctx) => {
+      for (let i = 0; i < messages.length; i++) {
+        const content = messages[i].content;
+        if (content.length > MAX_PARTS_PER_MESSAGE) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [i, "content"],
+            message: `Message exceeds maximum of ${MAX_PARTS_PER_MESSAGE} parts.`,
+          });
+          return;
+        }
+        for (let j = 0; j < content.length; j++) {
+          const part = content[j];
+          if ("media" in part && part.media) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [i, "content", j],
+              message: "Media parts are not allowed on text chat endpoints.",
+            });
+            return;
+          }
+          if (
+            "text" in part &&
+            typeof part.text === "string" &&
+            part.text.length > MAX_MESSAGE_PART_CHARS
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [i, "content", j],
+              message: `Message text exceeds maximum length of ${MAX_MESSAGE_PART_CHARS} characters.`,
+            });
+            return;
+          }
+        }
+      }
+    })
+    .optional(),
+  prompt: z
+    .array(PartSchema)
+    .max(4)
+    .superRefine((parts, ctx) =>
+      validateTextOnlyParts(parts, MAX_PROMPT_CHARS, "prompt", ctx)
+    )
+    .optional(),
   resume: z
     .object({
-      respond: z.array(ToolResponsePartSchema).optional(),
-      restart: z.array(ToolRequestPartSchema).optional(),
+      respond: z.array(ToolResponsePartSchema).max(10).optional(),
+      restart: z.array(ToolRequestPartSchema).max(10).optional(),
     })
     .optional(),
 });

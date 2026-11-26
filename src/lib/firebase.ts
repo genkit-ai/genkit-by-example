@@ -28,7 +28,12 @@ import {
   onAuthStateChanged,
   signInAnonymously,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+  getToken as getFirebaseAppCheckToken,
+  type AppCheck,
+} from "firebase/app-check";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -70,7 +75,32 @@ export function setCurrentScreen(name: string) {
 export const auth = initializeAuth(app, {
   persistence: [indexedDBLocalPersistence],
 });
-export const db = getFirestore();
+
+let appCheck: AppCheck | undefined;
+if (typeof window !== "undefined") {
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  if (siteKey) {
+    if (process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN) {
+      // Allow local testing with a Firebase App Check debug token.
+      (
+        self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: string | boolean }
+      ).FIREBASE_APPCHECK_DEBUG_TOKEN =
+        process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN === "true"
+          ? true
+          : process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN;
+    }
+    appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(siteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  }
+}
+
+export async function getAppCheckToken(): Promise<string | undefined> {
+  if (!appCheck) return undefined;
+  const { token } = await getFirebaseAppCheckToken(appCheck, false);
+  return token;
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (typeof window !== "undefined") {

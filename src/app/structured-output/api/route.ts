@@ -22,7 +22,7 @@ import genkitEndpoint from "@/lib/genkit-endpoint";
 import { CharacterSheetSchema } from "../schema";
 
 export const POST = genkitEndpoint(
-  { schema: z.object({ prompt: z.string() }) },
+  { schema: z.object({ prompt: z.string().trim().min(1).max(2_000) }) },
   ({ prompt }) =>
     ai.generateStream({
       prompt: `Generate an interesting Dungeons & Dragons character based on the following prompt: ${prompt}`,

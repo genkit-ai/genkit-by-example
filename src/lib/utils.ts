@@ -18,7 +18,7 @@ import { clsx, type ClassValue } from "clsx";
 import type { GenerateStreamResponse, MessageData, Part } from "genkit";
 import { GenerateResponseChunkData } from "genkit/model";
 import { twMerge } from "tailwind-merge";
-import { auth, logEvent } from "./firebase";
+import { auth, getAppCheckToken, logEvent } from "./firebase";
 import { getIdToken } from "firebase/auth";
 
 export function cn(...inputs: ClassValue[]) {
@@ -69,30 +69,41 @@ export function toReadableStream(
   });
 }
 
+async function authHeaders(): Promise<Record<string, string>> {
+  let token: string | undefined;
+  if (auth.currentUser) {
+    token = await getIdToken(auth.currentUser);
+  }
+  if (!token) throw new Error("Must be authenticated to make API calls.");
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+  const appCheckToken = await getAppCheckToken();
+  if (appCheckToken) {
+    headers["X-Firebase-AppCheck"] = appCheckToken;
+  }
+  return headers;
+}
+
 export async function simplePost<ReqData = unknown, ResultData = unknown>(
   path: string,
   data: ReqData
 ): Promise<ResultData> {
-  let token: string | undefined;
-  if (auth.currentUser) {
-    token = await getIdToken(auth.currentUser!);
-  }
-  if (!token) throw new Error("Must be authenticated to make API calls.");
+  const headers = await authHeaders();
 
   logEvent("demo_api_call", { path });
   const response = await fetch(path, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    if (response.headers.get("content-type") === "application/json") {
+    if (response.headers.get("content-type")?.includes("application/json")) {
       const error = await response.json();
-      throw new Error(error.message);
+      throw new Error(error.message || error.error?.message || "Request failed.");
     }
     throw new Error(
       `Unexpected HTTP error: ${(await response.text()).substring(0, 200)}`
@@ -114,24 +125,17 @@ export async function* post<
   result?: ResultData;
   error?: { message: string; status?: number };
 }> {
-  let token: string | undefined;
-  if (auth.currentUser) {
-    token = await getIdToken(auth.currentUser!);
-  }
-  if (!token) throw new Error("Must be authenticated to make API calls.");
+  const headers = await authHeaders();
 
   logEvent("demo_api_call", { path });
   const response = await fetch(path, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    if (response.headers.get("content-type") === "application/json") {
+    if (response.headers.get("content-type")?.includes("application/json")) {
       const error = await response.json();
       yield { error };
       return;

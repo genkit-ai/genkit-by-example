@@ -20,6 +20,19 @@ env:
   - variable: GCLOUD_LOCATION
     value: us-central1
   - variable: MAX_REQUESTS_HOURLY
-    value: "50"
+    value: "30"
+  - variable: MAX_IP_REQUESTS_HOURLY
+    value: "60"
+  - variable: MAX_GLOBAL_REQUESTS_HOURLY
+    value: "500"
   - variable: SITE_ORIGIN
     value: https://examples.genkit.dev
+  - variable: ALLOWED_ORIGINS
+    value: https://examples.genkit.dev,https://genkit-by-example--genkit-by-example.us-central1.hosted.app
+  - variable: ENFORCE_APP_CHECK
+    value: "true"
+  - variable: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    value: 6LfoFTQuAAAAAL3MBiDS65_kHHc8F7JxpAeGY_cS
+    availability:
+      - BUILD
+      - RUNTIME
