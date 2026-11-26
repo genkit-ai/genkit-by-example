@@ -17,3 +17,19 @@ export const ImageObjectSchema = z.object({
 });
 
 export type ImageObject = z.infer<typeof ImageObjectSchema>;
+
+const MAX_IMAGE_DATA_URI_CHARS = 6_000_000; // ~4.5 MB decoded
+
+export const ImageAnalysisRequestSchema = z.object({
+  system: z
+    .array(z.object({ text: z.string().max(1_000) }))
+    .max(4)
+    .optional(),
+  imageUrl: z
+    .string()
+    .max(MAX_IMAGE_DATA_URI_CHARS, "Image exceeds maximum allowed size.")
+    .regex(
+      /^data:image\/(png|jpeg|jpg|webp|gif);base64,/,
+      "Only base64-encoded PNG, JPEG, WebP, or GIF data URIs are allowed."
+    ),
+});

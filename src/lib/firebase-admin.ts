@@ -15,16 +15,18 @@
  */
 
 import { initializeApp, getApps, getApp } from "firebase-admin/app";
+import { getAppCheck } from "firebase-admin/app-check";
 import { getDatabase } from "firebase-admin/database";
 import { getAuth } from "firebase-admin/auth";
 
 const projectId = process.env.GCLOUD_PROJECT || "genkit-by-example";
-let admin = getApps().length
+const admin = getApps().length
   ? getApp()
   : initializeApp({
-    projectId,
-    databaseURL: `https://${projectId}-default-rtdb.firebaseio.com/`,
-  });
+      projectId,
+      databaseURL: `https://${projectId}-default-rtdb.firebaseio.com/`,
+    });
 
 export const adminRtdb = getDatabase(admin);
 export const adminAuth = getAuth(admin);
+export const adminAppCheck = getAppCheck(admin);
