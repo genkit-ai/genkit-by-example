@@ -29,7 +29,7 @@ export const ImageAnalysisRequestSchema = z.object({
     .string()
     .max(MAX_IMAGE_DATA_URI_CHARS, "Image exceeds maximum allowed size.")
     .regex(
-      /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/,
+      /^data:image\/(png|jpeg|jpg|webp|gif);base64,/,
       "Only base64-encoded PNG, JPEG, WebP, or GIF data URIs are allowed."
     ),
 });

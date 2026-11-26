@@ -15,6 +15,7 @@
  */
 
 import { createHash } from "crypto";
+import { ServerValue } from "firebase-admin/database";
 import { GenerateStreamResponse, z } from "genkit";
 import { NextRequest, NextResponse } from "next/server";
 import { GenerateRequestSchema } from "./schema";
@@ -77,12 +78,39 @@ function errorResponse(error: { message: string; status: number }) {
   });
 }
 
-async function incrementCounter(path: string): Promise<number> {
-  const { committed, snapshot } = await adminRtdb
-    .ref(path)
-    .transaction((count) => (count || 0) + 1);
-  if (!committed) return Number.MAX_SAFE_INTEGER;
-  return snapshot.val();
+async function getRateLimitCounts(
+  hourBucket: string,
+  uid: string,
+  ipHash: string | null
+): Promise<{ globalCount: number; uidCount: number; ipCount: number }> {
+  const [globalSnap, uidSnap, ipSnap] = await Promise.all([
+    adminRtdb.ref(`limits/${hourBucket}/global`).get(),
+    adminRtdb.ref(`limits/${hourBucket}/uid/${uid}`).get(),
+    ipHash
+      ? adminRtdb.ref(`limits/${hourBucket}/ip/${ipHash}`).get()
+      : Promise.resolve(null),
+  ]);
+
+  return {
+    globalCount: Number(globalSnap.val() || 0),
+    uidCount: Number(uidSnap.val() || 0),
+    ipCount: ipSnap ? Number(ipSnap.val() || 0) : 0,
+  };
+}
+
+async function incrementRateLimits(
+  hourBucket: string,
+  uid: string,
+  ipHash: string | null
+): Promise<void> {
+  const updates: Record<string, object> = {
+    [`limits/${hourBucket}/global`]: ServerValue.increment(1),
+    [`limits/${hourBucket}/uid/${uid}`]: ServerValue.increment(1),
+  };
+  if (ipHash) {
+    updates[`limits/${hourBucket}/ip/${ipHash}`] = ServerValue.increment(1);
+  }
+  await adminRtdb.ref().update(updates);
 }
 
 function getClientIp(request: NextRequest): string | null {
@@ -149,29 +177,30 @@ async function authorize(request: NextRequest): Promise<NextResponse | null> {
 
   const hourBucket = new Date().toISOString().substring(0, 13);
   const clientIp = getClientIp(request);
+  const ipHash = clientIp ? hashKey(clientIp) : null;
 
-  const [globalCount, uidCount, ipCount] = await Promise.all([
-    incrementCounter(`limits/${hourBucket}/global`),
-    incrementCounter(`limits/${hourBucket}/uid/${uid}`),
-    clientIp
-      ? incrementCounter(`limits/${hourBucket}/ip/${hashKey(clientIp)}`)
-      : Promise.resolve(0),
-  ]);
+  const { globalCount, uidCount, ipCount } = await getRateLimitCounts(
+    hourBucket,
+    uid,
+    ipHash
+  );
 
-  if (globalCount > MAX_GLOBAL_REQUESTS_HOURLY) {
+  if (globalCount >= MAX_GLOBAL_REQUESTS_HOURLY) {
     return errorResponse({
       status: 429,
       message:
         "Demo capacity for this hour has been reached. Please try again later.",
     });
   }
-  if (uidCount > MAX_REQUESTS_HOURLY || ipCount > MAX_IP_REQUESTS_HOURLY) {
+  if (uidCount >= MAX_REQUESTS_HOURLY || ipCount >= MAX_IP_REQUESTS_HOURLY) {
     return errorResponse({
       status: 429,
       message:
         "You have reached your demo request limit for the hour. Come back later.",
     });
   }
+
+  await incrementRateLimits(hourBucket, uid, ipHash);
   return null;
 }
 
@@ -189,15 +218,45 @@ async function readJsonBody(
     };
   }
 
-  const raw = await request.text();
-  if (Buffer.byteLength(raw, "utf8") > maxBytes) {
+  if (!request.body) {
     return {
       error: errorResponse({
-        status: 413,
-        message: "Request payload exceeds maximum allowed size.",
+        status: 400,
+        message: "Invalid JSON request body.",
       }),
     };
   }
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let receivedBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      receivedBytes += value.byteLength;
+      if (receivedBytes > maxBytes) {
+        await reader.cancel();
+        return {
+          error: errorResponse({
+            status: 413,
+            message: "Request payload exceeds maximum allowed size.",
+          }),
+        };
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return {
+      error: errorResponse({
+        status: 400,
+        message: "Failed to read request body.",
+      }),
+    };
+  }
+
+  const raw = Buffer.concat(chunks).toString("utf8");
 
   try {
     return { data: JSON.parse(raw) };
